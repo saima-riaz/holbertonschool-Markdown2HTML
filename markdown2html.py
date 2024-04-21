@@ -1,61 +1,55 @@
 #!/usr/bin/python3
 
+"""
+markdown2html.py
+
+A script to convert Markdown files to HTML format.
+
+Usage:
+    markdown2html.py <input_file> <output_file>
+"""
+
 import sys
 
-def markdown_to_html(md_file, html_file):
-    """
-    Convert Markdown syntax to HTML syntax for headings and lists.
+def markdown_to_html(input_file, output_file):
+    with open(input_file, 'r') as markdown_file:
+        markdown_lines = markdown_file.readlines()
 
-    Args:
-        md_file (str): Path to the input Markdown file.
-        html_file (str): Path to the output HTML file.
-    """
-    with open(md_file, 'r') as md:
-        markdown_content = md.readlines()
+    with open(output_file, 'w') as html_file:
+        in_list = False
+        in_paragraph = False
+        for line in markdown_lines:
+            line = line.strip()
+            if line.startswith('#'):
+                html_file.write(f'<h1>{line[1:].strip()}</h1>\n')
+            elif line.startswith('*') or line.startswith('-'):
+                if not in_list:
+                    html_file.write('<ul>\n')
+                    in_list = True
+                html_file.write(f'    <li>{line[1:].strip()}</li>\n')
+            elif line.strip() == '':
+                if in_list:
+                    html_file.write('</ul>\n')
+                    in_list = False
+                if in_paragraph:
+                    html_file.write('</p>\n')
+                    in_paragraph = False
+            else:
+                if not in_paragraph:
+                    html_file.write('<p>\n')
+                    in_paragraph = True
+                html_file.write(f'    {line}\n')
+        if in_list:
+            html_file.write('</ul>\n')
+        if in_paragraph:
+            html_file.write('</p>\n')
 
-    html_content = ""
-    in_list = False
-    is_ordered_list = False
-
-    for line in markdown_content:
-        if line.startswith("#"):
-            html_content += f"<h1>{line.strip('#').strip()}</h1>"
-        elif line.startswith("*"):
-            if not in_list or is_ordered_list:
-                html_content += "<ul>"
-                in_list = True
-                is_ordered_list = False
-            html_content += f"<li>{line.strip('*').strip()}</li>"
-        elif line.startswith("1."):
-            if not in_list or not is_ordered_list:
-                html_content += "<ol>"
-                in_list = True
-                is_ordered_list = True
-            html_content += f"<li>{line.strip('1.').strip()}</li>"
-        else:
-            if in_list:
-                if is_ordered_list:
-                    html_content += "</ol>"
-                else:
-                    html_content += "</ul>"
-                in_list = False
-            html_content += line
-
-    if in_list:
-        if is_ordered_list:
-            html_content += "</ol>"
-        else:
-            html_content += "</ul>"
-
-    with open(html_file, 'w') as html:
-        html.write(html_content)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print("Usage: markdown2html.py input.md output.html")
+        print("Usage: markdown2html.py <input_file> <output_file>")
         sys.exit(1)
-
+    
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-
+    
     markdown_to_html(input_file, output_file)
