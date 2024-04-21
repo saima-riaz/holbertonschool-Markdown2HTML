@@ -1,54 +1,49 @@
 #!/usr/bin/python3
 """
-markdown2html.py: Convert Markdown headings to HTML
+Write a script markdown2html.py that takes two string arguments:
+
+    First argument is the name of the Markdown file
+    Second argument is the output file name
 """
 
 import sys
 import os.path
+import re
+import hashlib
 
-def parse_heading(line):
-    ''' Parse and convert Markdown headings to HTML '''
-    # Count the number of '#' characters at the beginning of the line
-    heading_num = len(line) - len(line.lstrip('#'))
-    # Check if the line is a heading (1 to 6 '#' characters)
-    if 1 <= heading_num <= 6:
-        # Generate HTML for the heading
-        return f'<h{heading_num}>{line.lstrip("#").strip()}</h{heading_num}>\n'
-    # If not a heading, return the line unchanged
-    return line
+def markdown_to_html(md_file, html_file):
+    with open(md_file, 'r') as md:
+        markdown_content = md.readlines()
 
-def convert_markdown_to_html(input_file, output_file):
-    ''' Convert Markdown file to HTML '''
-    # Read the Markdown file line by line
-    with open(input_file, 'r') as f:
-        markdown_lines = f.readlines()
+    html_content = ""
+    in_list = False
 
-    # Parse each line of Markdown and convert headings to HTML
-    html_lines = [parse_heading(line) for line in markdown_lines]
+    for line in markdown_content:
+        if line.startswith("#"):
+            html_content += f"<h1>{line.strip('#').strip()}</h1>"
+        elif line.startswith("-"):
+            if not in_list:
+                html_content += "<ul>"
+                in_list = True
+            html_content += f"<li>{line.strip('-').strip()}</li>"
+        else:
+            if in_list:
+                html_content += "</ul>"
+                in_list = False
+            html_content += line
 
-    # Write the HTML lines to the output file
-    with open(output_file, 'w') as f:
-        f.writelines(html_lines)
+    if in_list:
+        html_content += "</ul>"
 
-def main():
-    ''' Main function '''
-    # Check if the correct number of arguments is provided
+    with open(html_file, 'w') as html:
+        html.write(html_content)
+
+if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: markdown2html.py <input_file> <output_file>")
+        print("Usage: markdown2html.py input.md output.html")
         sys.exit(1)
 
-    # Get input and output file paths from command line arguments
     input_file = sys.argv[1]
     output_file = sys.argv[2]
 
-    # Check if the input file exists
-    if not os.path.isfile(input_file):
-        print(f"Error: Input file '{input_file}' not found.")
-        sys.exit(1)
-
-    # Convert Markdown to HTML and write to output file
-    convert_markdown_to_html(input_file, output_file)
-    print(f"Conversion successful. HTML written to '{output_file}'.")
-
-if __name__ == "__main__":
-    main()
+    markdown_to_html(input_file, output_file)
