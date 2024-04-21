@@ -1,44 +1,58 @@
-#!/usr/bin/env python3
-
-#script markdown2html.py that takes an argument 2 strings:
-
-# First argument is the name of the Markdown file
-# Second argument is the output file name
+#!/usr/bin/python3
+"""
+This script, markdown2html.py, takes two string arguments:
+- The first argument is the name of the Markdown file.
+- The second argument is the output file name.
+It converts Markdown headings in the file to HTML heading tags.
+"""
 
 import sys
 import os
 
-def convert_markdown_to_html(markdown_file, output_file):
-    try:
-        with open(markdown_file, 'r') as md:
-            markdown_content = md.read()
-    except FileNotFoundError:
-        print(f"Missing {markdown_file}", file=sys.stderr)
-        sys.exit(1)
 
-    # Convert Markdown to HTML (you may use your preferred method here)
-    # For example, you can use a Markdown library like markdown2 or mistune
+def parse_heading(line):
+    """Parse and convert Markdown headings to HTML.
 
-    # For demonstration purposes, let's just copy the content as is
-    html_content = markdown_content
+    Args:
+        line (str): A string from the Markdown file.
 
-    with open(output_file, 'w') as html:
-        html.write(html_content)
+    Returns:
+        str: A string formatted as an HTML heading if the line is a
+        Markdown heading,
+        otherwise returns the line unchanged.
+    """
+    # Remove leading spaces and count the number of '#' characters
+    stripped_line = line.lstrip()
+    heading_num = len(stripped_line) - len(stripped_line.lstrip('#'))
 
-if __name__ == "__main__":
-    # Check if correct number of arguments is provided
+    # Check if the line is a valid Markdown heading
+    if 1 <= heading_num <= 6:
+        # Remove '#' characters and any leading/trailing spaces from the text
+        content = stripped_line[heading_num:].strip()
+        return f"<h{heading_num}>{content}</h{heading_num}>\n"
+    return line
+
+
+def check_arguments():
+    """Check if the number of command-line arguments is
+    correct and files exist."""
     if len(sys.argv) != 3:
-        print("Usage: ./markdown2html.py <MarkdownFile> <OutputFile>", file=sys.stderr)
+        print("Usage: ./markdown2html.py README.md README.html",
+              file=sys.stderr)
         sys.exit(1)
 
-    markdown_file = sys.argv[1]
-    output_file = sys.argv[2]
-
-    # Check if Markdown file exists
-    if not os.path.exists(markdown_file):
-        print(f"Missing {markdown_file}", file=sys.stderr)
+    if not os.path.isfile(sys.argv[1]):
+        print(f"Missing {sys.argv[1]}", file=sys.stderr)
         sys.exit(1)
+def convert_markdown_to_html(markdown_file, html_file):
+    ''' Convert Markdown file to HTML '''
+    with open(markdown_file) as md, open(html_file, 'w') as html:
+        for line in md:
+            line = parse_heading(line)
 
-    convert_markdown_to_html(markdown_file, output_file)
 
+
+if __name__ == '__main__':
+    check_arguments()
+    convert_markdown_to_html(sys.argv[1], sys.argv[2])
     sys.exit(0)
